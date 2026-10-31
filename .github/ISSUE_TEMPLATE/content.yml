@@ -1,0 +1,43 @@
+name: Problem or editorial
+description: Propose a new problem, or report an error in an existing statement, test, hint or editorial.
+labels: [content]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read docs/CONTENT_GUIDE.md first. Problems must be **original** or carry a verified
+        license with attribution. Do not paste statements copied from other sites or books.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options: [New problem idea, Error in an existing problem, Translation (ky / ru / en)]
+    validations: { required: true }
+  - type: input
+    id: slug
+    attributes:
+      label: Problem slug
+      description: For existing problems, e.g. sample-sum.
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: The idea or the error, with a sample input if relevant.
+    validations: { required: true }
+  - type: dropdown
+    id: origin
+    attributes:
+      label: Origin
+      options: [Original (written by me / for this project), Licensed from a source (give license and link below), Not applicable]
+    validations: { required: true }
+  - type: input
+    id: source
+    attributes:
+      label: Source and license
+      description: Required if the problem comes from elsewhere.
+  - type: checkboxes
+    id: ai
+    attributes:
+      label: AI assistance
+      options:
+        - label: An AI tool helped draft this (it will be marked generated_with_ai and needs extra review).

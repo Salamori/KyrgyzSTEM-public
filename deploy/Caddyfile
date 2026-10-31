@@ -1,0 +1,26 @@
+# Reverse proxy in front of the web app (docs/DEPLOYMENT.md).
+# SITE_ADDRESS is a domain name (automatic HTTPS via Let's Encrypt) or, for local and CI
+# smoke tests only, http://localhost.
+{
+	# No admin API on the network.
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	reverse_proxy web:3000 {
+		# Audit F-01: replace whatever X-Forwarded-For the client sent with the address of
+		# the peer that actually connected. The API trusts this header only from `web`.
+		# If another proxy or a cloud load balancer sits in front of Caddy, configure
+		# `trusted_proxies` with its addresses instead (see docs/DEPLOYMENT.md).
+		header_up X-Forwarded-For {remote_host}
+	}
+
+	# No access log: it would record student IP addresses. Errors still go to stderr.
+}

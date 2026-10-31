@@ -1,0 +1,284 @@
+# KyrgyzSTEM curriculum: topics, stages, prerequisites and tags.
+# Imported by apps/api/scripts/import_content.py. See docs/CONTENT_GUIDE.md.
+# Kyrgyz names are drafts and need review by a native speaker.
+
+[[topics]]
+slug = "implementation"
+stages = 4
+names = { en = "Implementation", ru = "Реализация", ky = "Ишке ашыруу" }
+summary.en = "Turning a precise description into a correct program: input/output, loops, conditions, arrays, strings and simulation."
+summary.ru = "Как превратить точное описание в правильную программу: ввод/вывод, циклы, условия, массивы, строки и моделирование."
+
+[[topics]]
+slug = "complexity"
+stages = 4
+names = { en = "Complexity analysis", ru = "Анализ сложности", ky = "Татаалдыкты талдоо" }
+summary.en = "Estimating how many operations a solution performs and reading constraints to choose an approach that fits the time limit."
+summary.ru = "Оценка числа операций и чтение ограничений, чтобы выбрать подход, который укладывается в лимит времени."
+
+[[topics]]
+slug = "sorting"
+stages = 4
+names = { en = "Sorting", ru = "Сортировка", ky = "Сорттоо" }
+summary.en = "Using sorting to reveal structure: built-in sorts, comparators, counting sort, sorting with sweeps."
+summary.ru = "Сортировка как способ увидеть структуру: встроенная сортировка, компараторы, сортировка подсчётом, сканирование."
+
+[[topics]]
+slug = "prefix-sums"
+stages = 4
+names = { en = "Prefix sums", ru = "Префиксные суммы", ky = "Префикстик суммалар" }
+summary.en = "Precomputing running totals to answer range questions in constant time; difference arrays for range updates."
+summary.ru = "Предподсчёт накопленных сумм для ответа на запросы на отрезке за O(1); разностные массивы для изменений на отрезке."
+
+[[topics]]
+slug = "binary-search"
+stages = 4
+names = { en = "Binary search", ru = "Двоичный поиск", ky = "Бинардык издөө" }
+summary.en = "Halving a search space over sorted data or any monotone condition, including searching for the answer itself."
+summary.ru = "Деление области поиска пополам на отсортированных данных или по монотонному условию, включая поиск ответа."
+
+[[topics]]
+slug = "two-pointers"
+stages = 4
+names = { en = "Two pointers", ru = "Два указателя", ky = "Эки көрсөткүч" }
+summary.en = "Moving two indices monotonically through sorted data or a sliding window to replace nested loops."
+summary.ru = "Монотонное движение двух индексов по отсортированным данным или скользящему окну вместо вложенных циклов."
+
+[[topics]]
+slug = "greedy"
+stages = 4
+names = { en = "Greedy algorithms", ru = "Жадные алгоритмы", ky = "Ач көз алгоритмдер" }
+summary.en = "Making the locally best choice and proving, usually by an exchange argument, that it stays optimal."
+summary.ru = "Выбор локально лучшего шага и доказательство (обычно обменом), что он остаётся оптимальным."
+
+[[topics]]
+slug = "number-theory"
+stages = 4
+names = { en = "Number theory", ru = "Теория чисел", ky = "Сандар теориясы" }
+summary.en = "Divisibility, GCD and LCM, primes and sieves, modular arithmetic and fast exponentiation."
+summary.ru = "Делимость, НОД и НОК, простые числа и решето, модульная арифметика и быстрое возведение в степень."
+
+[[topics]]
+slug = "combinatorics"
+stages = 4
+names = { en = "Combinatorics", ru = "Комбинаторика", ky = "Комбинаторика" }
+summary.en = "Counting principles, binomial coefficients (also modulo a prime) and inclusion–exclusion."
+summary.ru = "Правила подсчёта, биномиальные коэффициенты (в том числе по модулю простого) и формула включений-исключений."
+
+[[topics]]
+slug = "data-structures"
+stages = 4
+names = { en = "Data structures", ru = "Структуры данных", ky = "Маалымат структуралары" }
+summary.en = "Stacks, queues, sets, maps and heaps first; then DSU, Fenwick trees, segment trees and sparse tables."
+summary.ru = "Сначала стек, очередь, множества, словари и кучи; затем СНМ, дерево Фенвика, дерево отрезков и разреженная таблица."
+
+[[topics]]
+slug = "graphs"
+stages = 4
+names = { en = "Graphs", ru = "Графы", ky = "Графтар" }
+summary.en = "Representing graphs and exploring them: BFS, DFS, components, shortest paths, topological order and MST."
+summary.ru = "Представление графов и обход: BFS, DFS, компоненты, кратчайшие пути, топологическая сортировка и MST."
+
+[[topics]]
+slug = "trees"
+stages = 4
+names = { en = "Trees", ru = "Деревья", ky = "Дарактар" }
+summary.en = "Rooted trees: traversals, depths, subtree sizes, Euler tours, LCA and rerooting."
+summary.ru = "Корневые деревья: обходы, глубины, размеры поддеревьев, эйлеров обход, LCA и перекоренение."
+
+[[topics]]
+slug = "dynamic-programming"
+stages = 4
+names = { en = "Dynamic programming", ru = "Динамическое программирование", ky = "Динамикалык программалоо" }
+summary.en = "Defining states and transitions: 1D and grid DP, knapsack, LIS, interval and bitmask DP, DP on trees."
+summary.ru = "Состояния и переходы: одномерная и табличная ДП, рюкзак, НВП, ДП по отрезкам и маскам, ДП на деревьях."
+
+# Prerequisites: (topic, stage) requires (requires, requires_stage).
+# strength = "required" drives recommendations; "helpful" only orders suggestions.
+# Students are never blocked: required edges produce a "recommended first" notice.
+[[prerequisites]]
+topic = "complexity"
+stage = 1
+requires = "implementation"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "number-theory"
+stage = 1
+requires = "implementation"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "data-structures"
+stage = 1
+requires = "implementation"
+requires_stage = 2
+strength = "required"
+
+[[prerequisites]]
+topic = "sorting"
+stage = 1
+requires = "complexity"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "prefix-sums"
+stage = 1
+requires = "complexity"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "binary-search"
+stage = 1
+requires = "sorting"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "two-pointers"
+stage = 1
+requires = "sorting"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "two-pointers"
+stage = 1
+requires = "prefix-sums"
+requires_stage = 1
+strength = "helpful"
+
+[[prerequisites]]
+topic = "greedy"
+stage = 1
+requires = "sorting"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "binary-search"
+stage = 3
+requires = "binary-search"
+requires_stage = 2
+strength = "required"
+
+[[prerequisites]]
+topic = "binary-search"
+stage = 3
+requires = "greedy"
+requires_stage = 1
+strength = "helpful"
+
+[[prerequisites]]
+topic = "combinatorics"
+stage = 1
+requires = "number-theory"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "graphs"
+stage = 1
+requires = "data-structures"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "graphs"
+stage = 1
+requires = "complexity"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "trees"
+stage = 1
+requires = "graphs"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "dynamic-programming"
+stage = 1
+requires = "complexity"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "dynamic-programming"
+stage = 3
+requires = "dynamic-programming"
+requires_stage = 2
+strength = "required"
+
+[[prerequisites]]
+topic = "dynamic-programming"
+stage = 3
+requires = "combinatorics"
+requires_stage = 1
+strength = "helpful"
+
+[[prerequisites]]
+topic = "dynamic-programming"
+stage = 4
+requires = "trees"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "data-structures"
+stage = 3
+requires = "prefix-sums"
+requires_stage = 1
+strength = "required"
+
+[[prerequisites]]
+topic = "data-structures"
+stage = 3
+requires = "data-structures"
+requires_stage = 2
+strength = "required"
+
+[[tags]]
+slug = "overflow"
+names = { en = "Integer overflow", ru = "Переполнение", ky = "Толуп кетүү" }
+
+[[tags]]
+slug = "off-by-one"
+names = { en = "Off-by-one", ru = "Ошибка на единицу", ky = "Бирге ката" }
+
+[[tags]]
+slug = "queries"
+names = { en = "Many queries", ru = "Много запросов", ky = "Көп суроо" }
+
+[[tags]]
+slug = "constraints-reading"
+names = { en = "Reading constraints", ru = "Чтение ограничений", ky = "Чектөөлөрдү окуу" }
+
+[[tags]]
+slug = "simulation"
+names = { en = "Simulation", ru = "Моделирование", ky = "Моделдөө" }
+
+[[tags]]
+slug = "intervals"
+names = { en = "Intervals", ru = "Отрезки", ky = "Кесиндилер" }
+
+[[tags]]
+slug = "median"
+names = { en = "Median", ru = "Медиана", ky = "Медиана" }
+
+[[tags]]
+slug = "sliding-window"
+names = { en = "Sliding window", ru = "Скользящее окно", ky = "Жылма терезе" }
+
+[[tags]]
+slug = "difference-array"
+names = { en = "Difference array", ru = "Разностный массив", ky = "Айырма массиви" }
+
+[[tags]]
+slug = "gcd"
+names = { en = "GCD", ru = "НОД", ky = "ЭЧБ" }

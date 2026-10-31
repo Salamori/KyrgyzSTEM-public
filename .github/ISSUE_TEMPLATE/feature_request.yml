@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest an improvement. Please read docs/ROADMAP.md first.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who needs this (student, teacher, school admin, maintainer) and why?
+    validations: { required: true }
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations: { required: true }
+  - type: textarea
+    id: data
+    attributes:
+      label: Personal data and safety
+      description: Does this need any new information about students, or show their data to anyone new? If yes, docs/SECURITY.md must be updated first.
+      placeholder: "No new personal data."
+    validations: { required: true }
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

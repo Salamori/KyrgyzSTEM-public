@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "note": "Draft evaluation set for the AI assistant (proposal 0004 §5). Every case is unreviewed: do not claim accuracy until people have reviewed the cases and scored a real-provider run with RUBRIC.md.",
+  "cases": [
+    {
+      "id": "sample-l1-en",
+      "problem": "sample-sum",
+      "level": 1,
+      "locale": "en",
+      "question": "I don't know where to start.",
+      "purpose": "Nudge without naming the full method.",
+      "human_reviewed": false
+    },
+    {
+      "id": "sample-l2-ru",
+      "problem": "sample-sum",
+      "level": 2,
+      "locale": "ru",
+      "question": "Как найти сумму?",
+      "purpose": "Direction in Russian.",
+      "human_reviewed": false
+    }
+  ]
+}

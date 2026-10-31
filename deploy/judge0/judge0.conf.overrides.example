@@ -1,0 +1,69 @@
+# Judge0 CE v1.13.1 settings for KyrgyzSTEM's judging VM. NOT a complete judge0.conf, and not
+# used by any compose file in this repository: Judge0 runs on its own VM from the official
+# release archive (docs/DEPLOYMENT.md §7). Apply these on top of that release's judge0.conf.
+#
+# Checked 2026-10-27 against judge0.conf, app/models/submission.rb and
+# app/enumerations/status.rb at tag v1.13.1 (key names, defaults, units, validation bounds).
+# NOT checked against a running instance: the effect of every limit still has to be shown by
+# the security checks in docs/DEPLOYMENT.md §7. Units: times in seconds, sizes in KB.
+#
+# Release: Judge0 CE v1.13.1 (2024-04-18; fixes CVE-2024-28185, CVE-2024-28189 and
+# CVE-2024-29021 in all earlier versions). Its docker-compose.yml uses judge0/judge0:latest
+# and publishes 2358 on every interface: change both before starting (DEPLOYMENT.md §7).
+
+# --- Authentication: only the KyrgyzSTEM worker holds this token --------------------------
+AUTHN_HEADER=X-Auth-Token
+# AUTHN_TOKEN=<long random value from the deployment secrets; the worker's JUDGE0_AUTH_TOKEN>
+# AUTHZ_TOKEN stays empty: no admin API calls are needed (empty means they are refused).
+# Defence in depth on top of the firewall: the app host's private address only.
+# ALLOW_IP=<app host private IP>
+
+# --- Features the worker does not use: off ------------------------------------------------
+ENABLE_WAIT_RESULT=false
+ENABLE_COMPILER_OPTIONS=false
+ENABLE_COMMAND_LINE_ARGUMENTS=false
+ENABLE_CALLBACKS=false
+ENABLE_ADDITIONAL_FILES=false
+ENABLE_SUBMISSION_DELETE=false
+# The worker submits one test per batch request; batches stay enabled for that endpoint.
+ENABLE_BATCHED_SUBMISSIONS=true
+MAX_SUBMISSION_BATCH_SIZE=20
+
+# --- No network for student programs -------------------------------------------------------
+# Default false already; ALLOW_ENABLE_NETWORK=false makes the server refuse any request to
+# turn it on (the worker always sends enable_network=false).
+ENABLE_NETWORK=false
+ALLOW_ENABLE_NETWORK=false
+# Limits apply to the whole program, and requests may not change that.
+ENABLE_PER_PROCESS_AND_THREAD_TIME_LIMIT=false
+ALLOW_ENABLE_PER_PROCESS_AND_THREAD_TIME_LIMIT=false
+ENABLE_PER_PROCESS_AND_THREAD_MEMORY_LIMIT=false
+ALLOW_ENABLE_PER_PROCESS_AND_THREAD_MEMORY_LIMIT=false
+
+# --- Upper bounds (the worker sends per-problem limits at or below these) -----------------
+# Problems allow 100 ms-20 s and 16-2048 MB (CHECK constraints on `problems`). The worker
+# sends CPU = limit x JUDGE0_TIME_FACTOR_*, wall = max(1 s, CPU x JUDGE0_WALL_TIME_FACTOR)
+# (Judge0 refuses wall < 1 s), memory = limit x JUDGE0_MEMORY_FACTOR_* in KB, max_file_size
+# = JUDGE0_MAX_OUTPUT_BYTES in KB. Values below fit the default factors (1, 3, 1, 1 MiB);
+# raise them with the factors. A request above a maximum is refused (422): the worker
+# retries and the submission ends in judge_error, never in a verdict.
+MAX_CPU_TIME_LIMIT=20
+MAX_WALL_TIME_LIMIT=60
+MAX_MEMORY_LIMIT=2097152
+MAX_MAX_FILE_SIZE=1024
+# Not sent by the worker, so these defaults apply to every run (owner decision: C++
+# recursion depth needs STACK_LIMIT; 64000 KB is the release default).
+STACK_LIMIT=64000
+MAX_STACK_LIMIT=64000
+MAX_PROCESSES_AND_OR_THREADS=60
+MAX_MAX_PROCESSES_AND_OR_THREADS=60
+NUMBER_OF_RUNS=1
+MAX_NUMBER_OF_RUNS=1
+# Bounds the server's backlog (new submissions are refused when full; the worker retries).
+MAX_QUEUE_SIZE=100
+
+# --- Judge0's own PostgreSQL and Redis (required; never KyrgyzSTEM's) ---------------------
+# Both must be set (the release refuses blanks); strong, unique values from the deployment
+# secrets. Neither service is published outside the Judge0 VM.
+# POSTGRES_PASSWORD=<secret>
+# REDIS_PASSWORD=<secret>

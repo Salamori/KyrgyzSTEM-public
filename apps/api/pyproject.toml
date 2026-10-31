@@ -1,0 +1,62 @@
+[project]
+name = "kyrgyzstem-api"
+version = "0.1.0"
+description = "KyrgyzSTEM API"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14",
+    "psycopg[binary]>=3.2",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "email-validator>=2.2",
+    "argon2-cffi>=23.1",
+    "anthropic>=1.17,<2",
+    "httpx>=0.28",  # the judge worker's Judge0 client (judge/judge0.py)
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+    "mypy>=1.13",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "ASYNC", "RUF"]
+ignore = ["B008"]  # FastAPI's Depends() in defaults
+
+[tool.ruff.lint.isort]
+# The local alembic/ migrations folder must not shadow the alembic package.
+known-third-party = ["alembic"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+"tests/test_ai.py" = ["F811"]  # fixtures imported from test_olympiad
+"tests/test_security_audit.py" = ["F811"]  # fixtures imported from other test modules
+"tests/test_account_security.py" = ["F811"]  # fixtures imported from test_olympiad
+"scripts/**" = ["T201"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["alembic/versions/"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_decorators = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

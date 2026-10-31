@@ -1,0 +1,38 @@
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# node
+node_modules/
+.next/
+out/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+next-env.d.ts
+
+# local tooling / data
+.tools/
+.pgdata/
+.DS_Store
+Thumbs.db
+
+# AI evaluation outputs (contain model answers for human review)
+apps/api/evals/assistant/runs/
+
+# database dumps and backups: never commit (they contain student data)
+backups/
+*.dump
+*.sql.gz

@@ -1,0 +1,31 @@
+slug = "sample-sum"
+band = "intro"
+band_rationale = "A single loop with one running total; a synthetic sample that shows the package format."
+time_limit_ms = 1000
+memory_limit_mb = 256
+scoring = "ioi"
+
+origin = "original"
+license = "CC-BY-4.0"
+authors = "KyrgyzSTEM contributors"
+attribution = "Synthetic sample written for this repository to exercise the content format. Not a teaching material. Drafted with AI assistance; must be reviewed by a human before publication."
+generated_with_ai = true
+
+topics = [{ slug = "implementation", stage = 1, primary = true }]
+tags = ["simulation"]
+
+[[groups]]
+points = 100
+description = "Full constraints."
+
+[hints]
+en = [
+  "Keep one variable with the running total and update it for each number.",
+  "Start the total at zero, and read exactly n numbers after the first line.",
+  "Print the total once, after the loop has finished.",
+]
+ru = [
+  "Храните одну переменную с текущей суммой и обновляйте её для каждого числа.",
+  "Начните сумму с нуля и прочитайте ровно n чисел после первой строки.",
+  "Выведите сумму один раз, когда цикл закончится.",
+]

@@ -1,0 +1,36 @@
+# Override for a frontend hosted on Vercel: this host runs only the API gateway, the API and
+# the database (docs/DEPLOYMENT.md, "Vercel frontend with an API gateway"). Needs Docker
+# Compose 2.24.4+ (for !override).
+#
+#   export COMPOSE="docker compose -f deploy/docker-compose.prod.yml -f deploy/docker-compose.gateway.yml --env-file deploy/.env.production"
+#
+# Traffic: Vercel (web, proxy.ts) → caddy (:443, secret required) → api (:8000) → db.
+# caddy and api share only the internal `gateway` network; caddy never reaches the database.
+# The API trusts X-Forwarded-For only from caddy's fixed address on that network (audit F-01).
+
+services:
+  caddy:
+    environment:
+      API_GATEWAY_SECRET: ${API_GATEWAY_SECRET:?set API_GATEWAY_SECRET (32+ letters, digits, - or _)}
+    volumes:
+      - ./Caddyfile.gateway:/etc/caddy/Caddyfile:ro
+    depends_on: !override
+      api: { condition: service_healthy }
+    networks: !override
+      edge: {}
+      gateway: { ipv4_address: 172.29.60.10 }
+
+  # The web app runs on Vercel; this host does not serve it.
+  web:
+    profiles: [self-hosted-web]
+
+  api:
+    command: ["sh", "-c", "exec $$UVICORN_CMD --forwarded-allow-ips=172.29.60.10"]
+    networks: !override [backend, egress, gateway]
+
+networks:
+  # caddy ↔ api only. internal: no route to the internet.
+  gateway:
+    internal: true
+    ipam:
+      config: [{ subnet: 172.29.60.0/24 }]

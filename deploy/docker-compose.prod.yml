@@ -1,0 +1,201 @@
+# Single-host staging/production stack. Read docs/DEPLOYMENT.md first.
+#   cp .env.example deploy/.env.production     # fill in every production value
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.production build
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.production up -d --wait
+#
+# Traffic: internet → caddy (:80/:443, TLS) → web (:3000) → api (:8000) → db.
+# Judging (opt-in, `--profile judge`): judge-worker → db, and judge-worker → Judge0 on a
+# separate VM over a private network. The API never talks to Judge0 and never gets its
+# token; it only queues submissions in JUDGE_LANGUAGES. Only caddy publishes ports. caddy OVERWRITES X-Forwarded-For with the real peer address
+# and the API trusts that header only from the web container, which is what audit F-01
+# requires. Do not publish web, api or db ports, or the header becomes spoofable again.
+name: kyrgyzstem-prod
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "20m", max-file: "5" }
+
+x-api-env: &api-env
+  APP_ENV: production
+  SESSION_COOKIE_SECURE: "true"
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:?}
+  SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-336}
+  CONTENT_DIR: /content
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_FORMAT: json
+  LLM_PROVIDER: ${LLM_PROVIDER:-}
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_MODEL: ${LLM_MODEL:-}
+  LLM_EFFORT: ${LLM_EFFORT:-medium}
+  LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-30}
+  LLM_RELIABLE_LOCALES: ${LLM_RELIABLE_LOCALES:-en,ru}
+  AI_DAILY_QUOTA_PER_USER: ${AI_DAILY_QUOTA_PER_USER:-20}
+  AI_GLOBAL_DAILY_CAP: ${AI_GLOBAL_DAILY_CAP:-1000}
+  AI_MONTHLY_BUDGET_USD: ${AI_MONTHLY_BUDGET_USD:-25}
+  ATTENDANCE_RETENTION_DAYS: ${ATTENDANCE_RETENTION_DAYS:-365}
+  JOIN_CODE_TTL_DAYS: ${JOIN_CODE_TTL_DAYS:-7}
+  # Languages queued for judging. Empty: everything is stored as not_judged. Set it only
+  # together with a running judge-worker that has these languages' Judge0 ids.
+  JUDGE_LANGUAGES: ${JUDGE_LANGUAGES:-}
+  # SEED_PASSWORD is deliberately absent: the seed refuses production anyway.
+
+# The judge worker's environment: the database and Judge0, nothing else (no AI keys).
+x-worker-env: &worker-env
+  APP_ENV: production
+  SESSION_COOKIE_SECURE: "true"
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:?}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_FORMAT: json
+  JUDGE_LEASE_SECONDS: ${JUDGE_LEASE_SECONDS:-120}
+  JUDGE_RENEW_SECONDS: ${JUDGE_RENEW_SECONDS:-30}
+  JUDGE_MAX_ATTEMPTS: ${JUDGE_MAX_ATTEMPTS:-3}
+  JUDGE_POLL_SECONDS: ${JUDGE_POLL_SECONDS:-2}
+  JUDGE_MAX_JUDGING_SECONDS: ${JUDGE_MAX_JUDGING_SECONDS:-1800}
+  JUDGE_BACKOFF_MAX_SECONDS: ${JUDGE_BACKOFF_MAX_SECONDS:-60}
+  JUDGE_SHUTDOWN_GRACE_SECONDS: ${JUDGE_SHUTDOWN_GRACE_SECONDS:-30}
+  JUDGE_WORKER_HEALTH_FILE: /tmp/judge-worker-health.json
+  # https:// unless the private network is trusted end to end (docs/DEPLOYMENT.md §7).
+  JUDGE0_URL: ${JUDGE0_URL:-}
+  JUDGE0_AUTH_TOKEN: ${JUDGE0_AUTH_TOKEN:-}
+  JUDGE0_LANGUAGE_ID_CPP: ${JUDGE0_LANGUAGE_ID_CPP:-}
+  JUDGE0_LANGUAGE_ID_PYTHON: ${JUDGE0_LANGUAGE_ID_PYTHON:-}
+  JUDGE0_TIMEOUT_SECONDS: ${JUDGE0_TIMEOUT_SECONDS:-10}
+  JUDGE0_POLL_SECONDS: ${JUDGE0_POLL_SECONDS:-1}
+  JUDGE0_MAX_WAIT_SECONDS: ${JUDGE0_MAX_WAIT_SECONDS:-300}
+  JUDGE0_TIME_FACTOR_CPP: ${JUDGE0_TIME_FACTOR_CPP:-1}
+  JUDGE0_TIME_FACTOR_PYTHON: ${JUDGE0_TIME_FACTOR_PYTHON:-1}
+  JUDGE0_MEMORY_FACTOR_CPP: ${JUDGE0_MEMORY_FACTOR_CPP:-1}
+  JUDGE0_MEMORY_FACTOR_PYTHON: ${JUDGE0_MEMORY_FACTOR_PYTHON:-1}
+  JUDGE0_WALL_TIME_FACTOR: ${JUDGE0_WALL_TIME_FACTOR:-3}
+  JUDGE0_MAX_OUTPUT_BYTES: ${JUDGE0_MAX_OUTPUT_BYTES:-1048576}
+  JUDGE0_MAX_RESPONSE_BYTES: ${JUDGE0_MAX_RESPONSE_BYTES:-16777216}
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS, e.g. kyrgyzstem.example.org}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web: { condition: service_healthy }
+    networks: [edge]
+    logging: *logging
+
+  web:
+    image: kyrgyzstem-web:${RELEASE_TAG:?set RELEASE_TAG, e.g. v0.1.0}
+    build:
+      context: ../apps/web
+      args: { API_INTERNAL_URL: http://api:8000 }
+    restart: unless-stopped
+    depends_on:
+      api: { condition: service_healthy }
+    networks:
+      edge: {}
+      backend: { ipv4_address: 172.29.58.10 }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    logging: *logging
+
+  migrate:
+    image: kyrgyzstem-api:${RELEASE_TAG:?}
+    build: ../apps/api
+    command: ["alembic", "upgrade", "head"]
+    environment: *api-env
+    restart: "no"
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [backend]
+    logging: *logging
+
+  api:
+    image: kyrgyzstem-api:${RELEASE_TAG:?}
+    build: ../apps/api
+    restart: unless-stopped
+    # Serve only; migrations ran in `migrate`. One worker (per-process rate limits).
+    command: ["sh", "-c", "exec $$UVICORN_CMD --forwarded-allow-ips=172.29.58.10"]
+    environment: *api-env
+    volumes: ["../content:/content:ro"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    # backend: web and db. egress: outbound HTTPS for the optional AI provider only.
+    networks: [backend, egress]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/ready', timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    logging: *logging
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: ${POSTGRES_DB:?}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+  # Opt-in: `docker compose --profile judge ...`. It never runs submitted code: Judge0
+  # does, on its own VM (docs/DEPLOYMENT.md §7; Judge0 is never part of this stack). It
+  # refuses to start (exit 2) without JUDGE0_URL and at least one language id.
+  judge-worker:
+    profiles: [judge]
+    image: kyrgyzstem-api:${RELEASE_TAG:?}
+    build: ../apps/api
+    command: ["python", "-m", "scripts.judge_worker"]
+    restart: unless-stopped
+    # Longer than JUDGE_SHUTDOWN_GRACE_SECONDS, so SIGTERM can release a job in flight.
+    stop_grace_period: 60s
+    environment: *worker-env
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    # backend: the database. judge: the route to the Judge0 VM (restricted by the host
+    # firewall to JUDGE0_URL's host and port only; see docs/DEPLOYMENT.md §7).
+    networks: [backend, judge]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "python", "-m", "scripts.judge_worker", "--check", "alive"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    logging: *logging
+
+networks:
+  edge: {}
+  # internal: no route to the internet. The database is reachable only from here.
+  backend:
+    internal: true
+    ipam:
+      config: [{ subnet: 172.29.58.0/24 }]
+  egress: {}
+  # The judge worker's only way out (not internal: the Judge0 VM is another host). A fixed
+  # subnet so the host firewall can allow exactly this subnet → Judge0 and drop the rest.
+  judge:
+    ipam:
+      config: [{ subnet: 172.29.59.0/24 }]
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

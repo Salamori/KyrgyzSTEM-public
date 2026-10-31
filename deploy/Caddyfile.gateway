@@ -1,0 +1,44 @@
+# API gateway for a frontend hosted on Vercel (docs/DEPLOYMENT.md, "Vercel frontend with
+# an API gateway"). Used only with deploy/docker-compose.gateway.yml.
+#
+# Audit F-01 in this setup: the API trusts X-Forwarded-For only from this container. Only
+# requests that carry the shared secret reach the API, and for those the client address is
+# the one the web app's proxy took from Vercel's own x-forwarded-for. Everything else,
+# including anyone who calls this host directly, gets 403, whatever headers they send.
+{
+	# No admin API on the network.
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	# API_GATEWAY_SECRET: letters, digits, '-' and '_' only, at least 32 characters
+	# ('*' would act as a wildcard here). The compose override refuses to start without it.
+	# Both headers are required, and the client address must look like an IP: without one,
+	# every request would share the gateway's own rate-limit identity.
+	@from_vercel {
+		path /api/*
+		header X-KS-Gateway-Auth {$API_GATEWAY_SECRET}
+		header_regexp X-KS-Client-IP ^[0-9A-Fa-f:.]{2,45}$
+	}
+
+	handle @from_vercel {
+		reverse_proxy api:8000 {
+			# Replace whatever X-Forwarded-For arrived with the client address the web
+			# app asserted, and never pass the gateway headers on to the API.
+			header_up X-Forwarded-For {http.request.header.X-KS-Client-IP}
+			header_up -X-KS-Gateway-Auth
+			header_up -X-KS-Client-IP
+		}
+	}
+
+	handle {
+		respond 403
+	}
+	# No access log: it would record student IP addresses. Errors still go to stderr.
+}

@@ -1,0 +1,48 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Security problem?** Do not report it here: see docs/SECURITY.md.
+        **Never paste real student data**, passwords, session cookies, tokens, `.env` contents
+        or database dumps. Use the synthetic @example.com accounts to reproduce.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: And what you expected instead.
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in as student@example.com
+        2. Open /problems/...
+        3. ...
+    validations: { required: true }
+  - type: input
+    id: request_id
+    attributes:
+      label: Request id
+      description: Shown with server errors (and in the X-Request-ID response header). Optional.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Web UI, API, Problems / content, School operations, AI assistant, Docker / deployment, Docs, Other]
+    validations: { required: true }
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Commit or version, how you run it (Docker / uv + npm / a deployment), browser and device.
+    validations: { required: true }
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Remove anything personal first.
+      render: text
