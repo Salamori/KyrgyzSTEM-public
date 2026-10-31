@@ -28,7 +28,7 @@ jobs:
       # Throwaway credentials of the CI service container, not a secret.
       TEST_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/kyrgyzstem_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
         with: { python-version: "3.12", enable-cache: true }
       - name: Install g++ (C++ reference solutions in tests/test_content.py)
@@ -45,7 +45,7 @@ jobs:
     timeout-minutes: 15
     defaults: { run: { working-directory: apps/web } }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm, cache-dependency-path: apps/web/package-lock.json }
       - run: npm ci
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
         with: { python-version: "3.12", enable-cache: true }
       - uses: actions/setup-node@v4
@@ -85,7 +85,7 @@ jobs:
     timeout-minutes: 30
     needs: [api, web]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Start the development stack
         run: |
           cp .env.example .env
@@ -114,7 +114,7 @@ jobs:
     env:
       ENV_FILE: deploy/.env.production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Start the production stack over plain HTTP
         run: |
           cp .env.example "$ENV_FILE"
